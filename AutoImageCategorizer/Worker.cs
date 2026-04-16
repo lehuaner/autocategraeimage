@@ -45,6 +45,9 @@ public class Worker : BackgroundService
             {
                 if (Directory.Exists(folder))
                 {
+                    // 处理已存在的文件夹和文件
+                    ProcessExistingFolders(folder);
+                    
                     var watcher = new FileSystemWatcher
                     {
                         Path = folder,
@@ -247,6 +250,86 @@ public class Worker : BackgroundService
         catch (Exception ex)
         {
             _logger.LogError(ex, $"Error processing existing images in {monitorFolder}");
+        }
+    }
+
+    private void ProcessExistingFolders(string monitorFolder)
+    {
+        try
+        {
+            _logger.LogInformation($"Processing existing folders in {monitorFolder}");
+            
+            // 获取所有子目录
+            string[] subdirectories = Directory.GetDirectories(monitorFolder);
+            
+            foreach (string subdir in subdirectories)
+            {
+                string folderName = Path.GetFileName(subdir);
+                
+                // 检查是否是日期格式的文件夹（如 2026-04-16）
+                if (DateTime.TryParse(folderName, out DateTime folderDate))
+                {
+                    _logger.LogInformation($"Found date folder: {folderName}");
+                    
+                    // 处理文件夹中的所有图片
+                    string[] files = Directory.GetFiles(subdir);
+                    foreach (string file in files)
+                    {
+                        if (IsImageFile(file))
+                        {
+                            // 直接使用文件夹的日期作为文件日期
+                            string fileName = Path.GetFileName(file);
+                            string targetFolder = GetTargetFolder(monitorFolder, folderDate);
+                            
+                            _logger.LogInformation($"Processing file in date folder: {fileName}, target folder: {targetFolder}");
+                            
+                            // 创建目标文件夹（如果不存在）
+                            if (!Directory.Exists(targetFolder))
+                            {
+                                Directory.CreateDirectory(targetFolder);
+                                _logger.LogInformation($"Created folder: {targetFolder}");
+                            }
+                            
+                            string destinationPath = Path.Combine(targetFolder, fileName);
+                            
+                            // 处理重名文件
+                            if (File.Exists(destinationPath))
+                            {
+                                string fileNameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
+                                string extension = Path.GetExtension(fileName);
+                                int counter = 1;
+                                
+                                while (File.Exists(destinationPath))
+                                {
+                                    string newFileName = $"{fileNameWithoutExt}_{counter}{extension}";
+                                    destinationPath = Path.Combine(targetFolder, newFileName);
+                                    counter++;
+                                }
+                            }
+                            
+                            // 移动文件
+                            File.Move(file, destinationPath);
+                            _logger.LogInformation($"Moved file from date folder: {file} -> {destinationPath}");
+                        }
+                    }
+                    
+                    // 删除空文件夹
+                    if (Directory.GetFiles(subdir).Length == 0 && Directory.GetDirectories(subdir).Length == 0)
+                    {
+                        Directory.Delete(subdir);
+                        _logger.LogInformation($"Deleted empty date folder: {subdir}");
+                    }
+                }
+                else
+                {
+                    // 递归处理子文件夹
+                    ProcessExistingFolders(subdir);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error processing existing folders in {monitorFolder}");
         }
     }
 }
