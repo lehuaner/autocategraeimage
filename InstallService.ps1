@@ -1,4 +1,4 @@
-﻿$SERVICE_NAME = "AutoImageCategorizer"
+﻿﻿$SERVICE_NAME = "AutoImageCategorizer"
 $EXE_PATH = Join-Path -Path $PSScriptRoot -ChildPath "AutoImageCategorizer\bin\Debug\net8.0-windows\win-x64\AutoImageCategorizer.exe"
 
 Write-Host "安装 AutoImageCategorizer 服务..."

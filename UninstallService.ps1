@@ -1,4 +1,4 @@
-﻿$SERVICE_NAME = "AutoImageCategorizer"
+﻿﻿$SERVICE_NAME = "AutoImageCategorizer"
 try {
     Write-Host "停止 $SERVICE_NAME 服务..."
     sc.exe stop "$SERVICE_NAME"
