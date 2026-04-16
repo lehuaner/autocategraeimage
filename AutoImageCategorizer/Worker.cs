@@ -10,7 +10,7 @@ public class Worker : BackgroundService
 {
     private readonly ILogger<Worker> _logger;
     private FileSystemWatcher _watcher;
-    private const string MonitorPath = "D:\图片\Screenshots";
+    private const string MonitorPath = @"D:\图片\Screenshots";
     private static readonly string[] ImageExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".bmp" };
 
     public Worker(ILogger<Worker> logger)
